@@ -1,3 +1,4 @@
+/*
 create database if not exists HuskyGrocers;
 
 use HuskyGrocers;

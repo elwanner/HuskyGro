@@ -81,3 +81,24 @@ def post_order():
     db.get_db().commit()
 
     return "Success!"
+
+@customers.route('/past_orders', methods=['GET'])
+def post_order():
+    req = request.get_json()
+    order_id = req['order_id']
+
+    query = "SELECT product_name, quantity, unit_price from CustOrderDetails join Products where order_id = {0}".format(order_id)
+
+    cursor = db.get_db().cursor()
+    cursor.execute(query)
+
+    column_headers = [x[0] for x in cursor.description]
+
+    json_data = []
+
+    theData = cursor.fetchall()
+
+    for row in theData:
+        json_data.append(dict(zip(column_headers, row)))
+
+    return jsonify(json_data)

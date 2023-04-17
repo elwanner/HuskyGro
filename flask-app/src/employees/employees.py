@@ -157,10 +157,34 @@ def delete_product():
 
     delete_stmt = 'DELETE FROM Products WHERE product_id = ' + str(product_id)
 
-    current_app.logger.info("BANANAS : " + str(product_id))
     current_app.logger.info(delete_stmt)
 
     cursor = db.get_db().cursor() 
     cursor.execute(delete_stmt)
     db.get_db().commit()
     return "Success"
+
+# add a new product
+@employees.route('/addnewproduct', methods = ["POST"])
+def add_new_product():
+    current_app.logger.info('Processing form data')
+    req_data = request.get_json()
+    current_app.logger.info(req_data)
+
+    product_id = req_data['new_product_id']
+    product_name = req_data['product_name']
+    buy_price = req_data['buying_price']
+    sell_price = req_data['selling_price']
+    units_in_stock = req_data['units']
+
+    insert_stmt = 'INSERT INTO Products (product_id, product_name, unit_price, sell_price, units_in_stock) VALUES ('
+    insert_stmt += product_id + ', "' + product_name + '", ' + str(buy_price) + ', ' + str(sell_price)
+    insert_stmt += ', ' + units_in_stock + ')'
+
+    current_app.logger.info(insert_stmt)
+
+    cursor = db.get_db().cursor()
+    cursor.execute(insert_stmt)
+    db.get_db().commit()
+    return "Success"
+    

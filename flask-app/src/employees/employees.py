@@ -131,19 +131,26 @@ def update_progress():
 
     update_stmt = 'UPDATE CustOrder SET employee_id = ' + str(employee_id) + ' WHERE order_id = ' + str(order_id) + ';'
 
+    current_app.logger.info(update_stmt)
+
+    cursor = db.get_db().cursor() 
+    cursor.execute(update_stmt)
+    db.get_db().commit()
+
     if progress == 1: 
         employee_id = req_data['employee_id']
         progress = req_data['progress']
         order_id = req_data['order_id']
         now = datetime.now()
         formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')
-        update_stmt += ' UPDATE CustOrder SET fulfillment_date = \'' + formatted_date + '\' WHERE order_id = ' + str(order_id) + ';'
+        stmt = ' UPDATE CustOrder SET fulfillment_date = \'' + formatted_date + '\' WHERE order_id = ' + str(order_id) + ';'
 
-    current_app.logger.info(update_stmt)
+        current_app.logger.info(stmt)
 
-    cursor = db.get_db().cursor() 
-    cursor.execute(update_stmt)
-    db.get_db().commit()
+        cursor = db.get_db().cursor() 
+        cursor.execute(stmt)
+        db.get_db().commit()
+    
     return "Success"
 
 # delete a product that is no longer offered 

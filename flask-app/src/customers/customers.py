@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, current_app
 import json
 from src import db
 from datetime import datetime
@@ -54,9 +54,14 @@ def get_aisle():
 def post_order():
     req = request.get_json()
 
+    current_app.logger.info(req)
+
     customer_id = req['customer_id']
     order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     need_by_date = req['need_by_date']
+    day = need_by_date[:10]
+    time = need_by_date[11:22]
+    formatted_date = "'" + day + " " + time + "'"
     tip = req['tip']
     paid = 1
     delivery = 0
@@ -67,14 +72,16 @@ def post_order():
 
     #HAVE TO RELOAD CONTAINERS FOR CHANGES MADE TO BOOTSTRAP - date for need by date and autoincrement for order_id
     query = "INSERT INTO CustOrder (order_id, customer_id, need_by_date, tip, paid, delivery, address) VALUES ("
-    query += "'" + str(5) + "', "
-    query += "'" + customer_id + "', "
-    query += "'" + need_by_date + "', "
-    query += "'" + tip + "', "
-    query += "'" + str(paid) + "', "
-    query += "'" + str(delivery) + "', "
+    query += str(6) + ", "
+    query += str(customer_id) + ", "
+    query += formatted_date + ", "
+    query += str(tip) + ", "
+    query += str(paid) + ", "
+    query += str(delivery) + ", "
     query += "'" + address + "'"
     query += ")"
+
+    current_app.logger.info(query)
 
     cursor = db.get_db().cursor()
     cursor.execute(query)
@@ -83,7 +90,7 @@ def post_order():
     return "Success!"
 
 @customers.route('/past_orders', methods=['GET'])
-def post_order():
+def past_order():
     req = request.get_json()
     order_id = req['order_id']
 
@@ -102,3 +109,36 @@ def post_order():
         json_data.append(dict(zip(column_headers, row)))
 
     return jsonify(json_data)
+
+#get all product names 
+@customers.route('/productname')
+def get_product_names(): 
+    cursor = db.get_db().cursor()
+
+    cursor.execute('select product_name as label, product_id as value from Products')
+    row_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(row_headers, row)))
+    the_response = make_response(jsonify(json_data))
+    the_response.status_code = 200
+    the_response.mimetype = 'application/json'
+    return the_response
+
+#get order details for a specific order 
+@customers.route('/orderdetails/<orderid>')
+def get_order_details(orderid): 
+    cursor.execute('select * from customers where id = {0}'.format(orderid))
+    cursor = db.get_db().cursor()
+
+    cursor.execute('select product_name, sell_price, quantity from CustOrderDetails join Products where order_id = {0}'.format(orderid))
+    row_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(row_headers, row)))
+    the_response = make_response(jsonify(json_data))
+    the_response.status_code = 200
+    the_response.mimetype = 'application/json'
+    return the_response

@@ -71,6 +71,9 @@ def post_order():
     customer_id = req['customer_id']
     order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     need_by_date = req['need_by_date']
+    day = need_by_date[:10]
+    time = need_by_date[11:22]
+    formatted_date = "'" + day + " " + time + "'"
     tip = req['tip']
     paid = 1
     if req['delivery'] == 'delivery':
@@ -81,12 +84,12 @@ def post_order():
 
     #insert new row into CustOorder
     query1 = "INSERT INTO CustOrder (order_id, customer_id, need_by_date, tip, paid, delivery, address) VALUES ("
-    query1 += "'" + order_id + "', "
-    query1 += "'" + customer_id + "', "
-    query1 += "'" + need_by_date + "', "
-    query1 += "'" + tip + "', "
-    query1 += "'" + str(paid) + "', "
-    query1 += "'" + str(delivery) + "', "
+    query1 += "" + str(order_id) + ", "
+    query1 += "" + str(customer_id) + ", "
+    query1 += "" + formatted_date + ", "
+    query1 += "" + str(tip) + ", "
+    query1 += "" + str(paid) + ", "
+    query1 += "" + str(delivery) + ", "
     query1 += "'" + address + "'"
     query1 += ")"
     cursor = db.get_db().cursor()
@@ -98,9 +101,9 @@ def post_order():
     product_id = req['product_id']
     quanity = req['quantity']
     query2 = "INSERT INTO CustOrderDetails (order_id, product_id, quantity) VALUES ("
-    query2 += "'" + order_id + "', "
-    query2 += "'" + product_id + "', "
-    query2 += "'" + quanity + "')"
+    query2 += "" + str(order_id) + ", "
+    query2 += "" + str(product_id) + ", "
+    query2 += "" + str(quanity) + ")"
     cursor = db.get_db().cursor()
     cursor.execute(query2)
     db.get_db().commit()
@@ -128,3 +131,36 @@ def past_orders():
         json_data.append(dict(zip(column_headers, row)))
 
     return jsonify(json_data)
+
+#get all product names 
+@customers.route('/productname')
+def get_product_names(): 
+    cursor = db.get_db().cursor()
+
+    cursor.execute('select product_name as label, product_id as value from Products')
+    row_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(row_headers, row)))
+    the_response = make_response(jsonify(json_data))
+    the_response.status_code = 200
+    the_response.mimetype = 'application/json'
+    return the_response
+
+#get order details for a specific order 
+@customers.route('/orderdetails/<orderid>')
+def get_order_details(orderid): 
+    cursor.execute('select * from customers where id = {0}'.format(orderid))
+    cursor = db.get_db().cursor()
+
+    cursor.execute('select product_name, sell_price, quantity from CustOrderDetails join Products where order_id = {0}'.format(orderid))
+    row_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(row_headers, row)))
+    the_response = make_response(jsonify(json_data))
+    the_response.status_code = 200
+    the_response.mimetype = 'application/json'
+    return the_response

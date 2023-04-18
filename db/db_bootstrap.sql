@@ -1,6 +1,6 @@
 -- This file is to bootstrap a database for the CS3200 project. 
 
--- Create a new database.  You can change the name later.  You'll
+-- Create a new database.  You can change the name later.  You
 -- need this name in the FLASK API file(s),  the AppSmith 
 -- data source creation.
 create database HuskyGrocers;

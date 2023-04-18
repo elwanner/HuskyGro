@@ -1,10 +1,11 @@
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, current_app
+from datetime import datetime
 import json
 from src import db
-from datetime import datetime
 
 customers = Blueprint('customers', __name__)
 
+#get all products
 @customers.route('/products')
 def get_all_products():
 
@@ -28,6 +29,7 @@ def get_all_products():
 
     return jsonify(json_data)
 
+#get a product's aisle
 @customers.route('/aisle')
 def get_aisle():
 
@@ -50,44 +52,68 @@ def get_aisle():
 
     return jsonify(json_data)
 
+#place a new order
 @customers.route('/order', methods=['POST'])
 def post_order():
     req = request.get_json()
 
+    #determine the order_id of the most recent order
+    query = "SELECT max(order_id) FROM CustOrder"
+    cursor = db.get_db().cursor()
+    cursor.execute(query)
+    data = cursor.fetchall()
+    order_id = 0
+    for row in data:
+        num = row[0]
+        order_id = str(num + 1)
+
+    #retrieve insert values from request
     customer_id = req['customer_id']
     order_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     need_by_date = req['need_by_date']
     tip = req['tip']
     paid = 1
-    delivery = 0
     if req['delivery'] == 'delivery':
         delivery = 1
+    else:
+        delivery = 0
     address = req['address']
 
-
-    #HAVE TO RELOAD CONTAINERS FOR CHANGES MADE TO BOOTSTRAP - date for need by date and autoincrement for order_id
-    query = "INSERT INTO CustOrder (order_id, customer_id, need_by_date, tip, paid, delivery, address) VALUES ("
-    query += "'" + str(5) + "', "
-    query += "'" + customer_id + "', "
-    query += "'" + need_by_date + "', "
-    query += "'" + tip + "', "
-    query += "'" + str(paid) + "', "
-    query += "'" + str(delivery) + "', "
-    query += "'" + address + "'"
-    query += ")"
-
+    #insert new row into CustOorder
+    query1 = "INSERT INTO CustOrder (order_id, customer_id, need_by_date, tip, paid, delivery, address) VALUES ("
+    query1 += "'" + order_id + "', "
+    query1 += "'" + customer_id + "', "
+    query1 += "'" + need_by_date + "', "
+    query1 += "'" + tip + "', "
+    query1 += "'" + str(paid) + "', "
+    query1 += "'" + str(delivery) + "', "
+    query1 += "'" + address + "'"
+    query1 += ")"
     cursor = db.get_db().cursor()
-    cursor.execute(query)
+    cursor.execute(query1)
+    db.get_db().commit()
+
+
+    #insert new row into CustOrderDetails
+    product_id = req['product_id']
+    quanity = req['quantity']
+    query2 = "INSERT INTO CustOrderDetails (order_id, product_id, quantity) VALUES ("
+    query2 += "'" + order_id + "', "
+    query2 += "'" + product_id + "', "
+    query2 += "'" + quanity + "')"
+    cursor = db.get_db().cursor()
+    cursor.execute(query2)
     db.get_db().commit()
 
     return "Success!"
 
+#retrieve prior order
 @customers.route('/past_orders', methods=['GET'])
-def post_order():
+def past_orders():
     req = request.get_json()
-    order_id = req['order_id']
+    customer_id = req['customer_id']
 
-    query = "SELECT product_name, quantity, unit_price from CustOrderDetails join Products where order_id = {0}".format(order_id)
+    query = "SELECT CustOrder.order_id, product_name, order_date, sell_price, CustOrderDetails.quantity from CustOrderDetails join CustOrder on CustOrderDetails.order_id = CustOrder.order_id join Products P on CustOrderDetails.product_id = P.product_id where CustOrder.customer_id = {0} ORDER BY order_date".format(customer_id)
 
     cursor = db.get_db().cursor()
     cursor.execute(query)

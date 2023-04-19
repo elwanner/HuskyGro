@@ -97,17 +97,6 @@ def post_order():
     db.get_db().commit()
 
 
-    #insert new row into CustOrderDetails
-    product_id = req['product_id']
-    quanity = req['quantity']
-    query2 = "INSERT INTO CustOrderDetails (order_id, product_id, quantity) VALUES ("
-    query2 += "" + str(order_id) + ", "
-    query2 += "" + str(product_id) + ", "
-    query2 += "" + str(quanity) + ")"
-    cursor = db.get_db().cursor()
-    cursor.execute(query2)
-    db.get_db().commit()
-
     return "Success!"
 
 #retrieve prior order
@@ -151,10 +140,11 @@ def get_product_names():
 #get order details for a specific order 
 @customers.route('/orderdetails/<orderid>')
 def get_order_details(orderid): 
-    cursor.execute('select * from customers where id = {0}'.format(orderid))
+    cursor = db.get_db().cursor()
+    cursor.execute('select * from CustOrderDetails where order_id = {0}'.format(orderid))
     cursor = db.get_db().cursor()
 
-    cursor.execute('select product_name, sell_price, quantity from CustOrderDetails join Products where order_id = {0}'.format(orderid))
+    cursor.execute('select product_name, sell_price, quantity from CustOrderDetails join Products on CustOrderDetails.product_id = Products.product_id where order_id = {0}'.format(orderid))
     row_headers = [x[0] for x in cursor.description]
     json_data = []
     theData = cursor.fetchall()
@@ -163,4 +153,47 @@ def get_order_details(orderid):
     the_response = make_response(jsonify(json_data))
     the_response.status_code = 200
     the_response.mimetype = 'application/json'
+    return the_response
+
+
+#adds a product and quantity to order details
+@customers.route('/addproduct', methods = ['POST'])
+def add_product_to_cart():
+    req = request.get_json()
+
+    current_app.logger.info(req)
+
+    order_id = req['order_id']
+    product_id = req['product_id']
+    quantity = req['quantity']
+
+    query = "INSERT INTO CustOrderDetails (order_id, product_id, quantity) VALUES ("
+    query += str(order_id) + ", "
+    query += str(product_id) + ", "
+    query += str(quantity)
+    query += ")"
+
+    current_app.logger.info(query)
+
+    cursor = db.get_db().cursor()
+    cursor.execute(query)
+    db.get_db().commit()
+
+    return "Success!"
+
+#get most recent order
+@customers.route('/recent_order/<customerid>')
+def get_recent_order(customerid):
+    cursor = db.get_db().cursor()
+    
+    cursor.execute('select order_id as label, order_id as value from CustOrder where customer_id = {0}'.format(customerid))
+    row_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(row_headers, row)))
+    the_response = make_response(jsonify(json_data))
+    the_response.status_code = 200
+    the_response.mimetype = 'application/json'
+    
     return the_response

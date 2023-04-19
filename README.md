@@ -1,9 +1,6 @@
-# MySQL + Flask Boilerplate Project
+# Project Overview
 
-This repo contains a boilerplate setup for spinning up 3 Docker containers: 
-1. A MySQL 8 container for obvious reasons
-1. A Python Flask container to implement a REST API
-1. A Local AppSmith Server
+We have developed a Flask grocery store application that facilitates a customer's shopping experience and also provides store management functionality for employees. With our application, a customer can view product information, such as what products are in stock and what aisle a product is in, and can also place orders online. Employees are able to view similar information about products in order to help customers, can service orders that customers placed online, and can add or delete prodcuts from inventroy. Our application uses Appsmith to generate front-end UI pages that customers and employees can interact with. Our application also uses MySQL to persist data (inventory, customer order, etc.,).  
 
 ## How to setup and start the containers
 **Important** - you need Docker Desktop installed

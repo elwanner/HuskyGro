@@ -148,7 +148,7 @@ create table if not exists StoreOrderDetails(
     foreign key(order_id)
         references StoreOrder(order_id),
     foreign key(product_id)
-        references Products(product_id)
+        references Products(product_id) ON UPDATE cascade ON DELETE restrict
 );
 
 
@@ -160,7 +160,7 @@ create table if not exists CustOrderDetails(
     foreign key(order_id)
         references CustOrder(order_id),
     foreign key(product_id)
-        references Products(product_id)
+        references Products(product_id) ON UPDATE cascade ON DELETE restrict
 );
 
 

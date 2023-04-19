@@ -162,6 +162,16 @@ def delete_product():
 
     product_id = req_data['product_id']
 
+    delete_1 = 'DELETE FROM CustOrderDetails WHERE product_id = ' + str(product_id)
+    cursor = db.get_db().cursor() 
+    cursor.execute(delete_1)
+    db.get_db().commit()
+
+    delete_2 = 'DELETE FROM StoreOrderDetails WHERE product_id = ' + str(product_id)
+    cursor = db.get_db().cursor() 
+    cursor.execute(delete_2)
+    db.get_db().commit()
+
     delete_stmt = 'DELETE FROM Products WHERE product_id = ' + str(product_id)
 
     current_app.logger.info(delete_stmt)

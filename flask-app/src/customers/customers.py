@@ -197,3 +197,33 @@ def get_recent_order(customerid):
     the_response.mimetype = 'application/json'
     
     return the_response
+
+#update quantity in customer order
+@customers.route('/order_quantity', methods=['PUT'])
+def update_order_quantity():
+    req = request.get_json()
+    order_id = req['order_id']
+    new_quantity = req['quantity']
+
+    query = 'UPDATE CustOrderDetails SET quantity = ' + str(new_quantity) + ' WHERE order_id = ' + str(order_id) + ';'
+
+    cursor = db.get_db().cursor()
+    cursor.execute(query)
+    db.get_db().commit()
+
+    return 'Success!'
+
+#delete product from customer order
+@customers.route('/remove_product', methods=['DELETE'])
+def delete_product_order():
+    req = request.get_json()
+    order_id = req['order_id']
+    product_id = req['product_id']
+
+    query = 'DELETE FROM CustOrderDetails WHERE product_id = ' + str(product_id) + ' and order_id = ' + str(order_id) + ';'
+
+    cursor = db.get_db().cursor()
+    cursor.execute(query)
+    db.get_db().commit()
+
+    return 'Success!'
